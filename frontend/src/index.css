@@ -1,0 +1,37 @@
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #0A0F0D;
+  --surface: #111814;
+  --surface2: #1A231F;
+  --border: rgba(255,255,255,0.06);
+  --indigo: #1B4332;
+  --indigo-light: #D4A017;
+  --indigo-dim: rgba(27,67,50,0.15);
+  --emerald: #10B981;
+  --emerald-dim: rgba(16,185,129,0.12);
+  --amber: #F59E0B;
+  --amber-dim: rgba(245,158,11,0.12);
+  --red: #EF4444;
+  --red-dim: rgba(239,68,68,0.12);
+  --text: #FFFFFF;
+  --muted: #B8C4BE;
+  --subtle: #6B8078;
+  --mono: 'JetBrains Mono', monospace;
+  --radius: 10px;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  line-height: 1.6;
+}
+
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+a { color: var(--indigo-light); text-decoration: none; }
+a:hover { text-decoration: underline; }

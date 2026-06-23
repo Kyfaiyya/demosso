@@ -1,0 +1,124 @@
+{
+  "realm": "sso-demo",
+  "displayName": "SSO Demo",
+  "loginTheme": "sso-demo",
+  "enabled": true,
+  "registrationAllowed": true,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "resetPasswordAllowed": true,
+  "editUsernameAllowed": false,
+  "bruteForceProtected": true,
+  "accessTokenLifespan": 300,
+  "ssoSessionMaxLifespan": 36000,
+
+  "clients": [
+    {
+      "clientId": "frontend-app",
+      "name": "Frontend React App",
+      "enabled": true,
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "redirectUris": [
+        "http://localhost:3000/*",
+        "http://localhost:3000",
+        "http://localhost:3001/*",
+        "http://localhost:3001",
+        "http://localhost:3002/*",
+        "http://localhost:3002",
+        "http://localhost:8000/*",
+        "http://localhost:8000"
+      ],
+      "webOrigins": [
+        "http://localhost:3000",
+        "http://localhost:3001",
+        "http://localhost:3002",
+        "http://localhost:8000"
+      ],
+      "protocol": "openid-connect",
+      "attributes": {
+        "pkce.code.challenge.method": "S256"
+      },
+      "protocolMappers": [
+        {
+          "name": "nik",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "consentRequired": false,
+          "config": {
+            "user.attribute": "nik",
+            "claim.name": "nik",
+            "jsonType.label": "String",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "true"
+          }
+        }
+      ]
+    },
+    {
+      "clientId": "backend-api",
+      "name": "Backend API Service",
+      "enabled": true,
+      "publicClient": false,
+      "secret": "backend-secret-1234",
+      "standardFlowEnabled": false,
+      "serviceAccountsEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "protocol": "openid-connect"
+    }
+  ],
+
+  "roles": {
+    "realm": [
+      { "name": "app-admin",   "description": "Administrator penuh" },
+      { "name": "app-manager", "description": "Manager dengan akses terbatas" },
+      { "name": "app-user",    "description": "Pengguna biasa" }
+    ]
+  },
+
+  "users": [
+    {
+      "id": "aaaa1111-1111-1111-1111-111111111111",
+      "username": "admin_dukcapil",
+      "email": "admin_dukcapil@sso.local",
+      "firstName": "Admin",
+      "lastName": "Dukcapil",
+      "enabled": true,
+      "emailVerified": true,
+      "credentials": [{ "type": "password", "value": "admin123", "temporary": false }]
+    },
+    {
+      "id": "bbbb2222-2222-2222-2222-222222222222",
+      "username": "admin_kominfo",
+      "email": "admin_kominfo@sso.local",
+      "firstName": "Admin",
+      "lastName": "Kominfo",
+      "enabled": true,
+      "emailVerified": true,
+      "credentials": [{ "type": "password", "value": "admin123", "temporary": false }]
+    },
+    {
+      "id": "cccc3333-3333-3333-3333-333333333333",
+      "username": "admin_pendidikan",
+      "email": "admin_pendidikan@sso.local",
+      "firstName": "Admin",
+      "lastName": "Pendidikan",
+      "enabled": true,
+      "emailVerified": true,
+      "credentials": [{ "type": "password", "value": "admin123", "temporary": false }]
+    },
+    {
+      "username": "1234567890123456",
+      "email": "budi@sso.local",
+      "firstName": "Budi",
+      "lastName": "Santoso",
+      "enabled": true,
+      "emailVerified": true,
+      "credentials": [{ "type": "password", "value": "budi123", "temporary": false }]
+    }
+  ],
+
+  "defaultRoles": ["app-user"]
+}

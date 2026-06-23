@@ -1,0 +1,229 @@
+version: "3.9"
+
+services:
+  # ── PostgreSQL Database ─────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    container_name: sso-postgres
+    environment:
+      POSTGRES_USER: sso_admin
+      POSTGRES_PASSWORD: sso_password
+      POSTGRES_DB: keycloak_db
+    volumes:
+      - pg-data:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/01-init.sql
+    ports:
+      - "5432:5432"
+    networks:
+      - sso-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sso_admin -d keycloak_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── Keycloak Auth Server ──────────────────────────────────────
+  keycloak:
+    image: quay.io/keycloak/keycloak:24.0
+    container_name: sso-keycloak
+    command: start-dev --import-realm
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin123
+      KC_HTTP_PORT: 8080
+      KC_HOSTNAME_STRICT: "false"
+      KC_HOSTNAME_STRICT_HTTPS: "false"
+      KC_HEALTH_ENABLED: "true"
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://postgres:5432/keycloak_db
+      KC_DB_USERNAME: sso_admin
+      KC_DB_PASSWORD: sso_password
+    volumes:
+      - ./keycloak/realm-config:/opt/keycloak/data/import
+      - ./keycloak/theme:/opt/keycloak/themes
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - sso-net
+    healthcheck:
+      test: ["CMD-SHELL", "exec 3<>/dev/tcp/127.0.0.1/8080 && echo -e 'GET /health/ready HTTP/1.1\r\nhost: localhost\r\nConnection: close\r\n\r\n' >&3 && cat <&3 | grep -q '200 OK'"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  # ── Backend 1 (Dukcapil) ────────────────────────────────────
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: sso-backend
+    environment:
+      PORT: 4000
+      KEYCLOAK_URL: http://keycloak:8080
+      KEYCLOAK_REALM: sso-demo
+      KEYCLOAK_CLIENT_ID: backend-api
+      KEYCLOAK_CLIENT_SECRET: backend-secret-1234
+      FRONTEND_URL: http://localhost:3000
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: app_a_db
+      DB_USER: sso_admin
+      DB_PASSWORD: sso_password
+      APP_NAME: Dukcapil
+      SEED_ADMIN: "true"
+    ports:
+      - "4000:4000"
+    depends_on:
+      keycloak:
+        condition: service_healthy
+    networks:
+      - sso-net
+    restart: unless-stopped
+
+  # ── Frontend 1 (Dukcapil) ───────────────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: sso-frontend
+    environment:
+      VITE_KEYCLOAK_URL: http://localhost:8080
+      VITE_KEYCLOAK_REALM: sso-demo
+      VITE_KEYCLOAK_CLIENT_ID: frontend-app
+      VITE_API_URL: http://localhost:4000
+      VITE_APP_NAME: Dukcapil
+      VITE_APP_COLOR: indigo
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    networks:
+      - sso-net
+    restart: unless-stopped
+
+  # ── Backend 2 (Kominfo) ─────────────────────────────────────
+  backend-2:
+    build:
+      context: ./backend-2
+      dockerfile: Dockerfile
+    container_name: sso-backend-2
+    environment:
+      PORT: 4001
+      KEYCLOAK_URL: http://keycloak:8080
+      KEYCLOAK_REALM: sso-demo
+      KEYCLOAK_CLIENT_ID: backend-api
+      KEYCLOAK_CLIENT_SECRET: backend-secret-1234
+      FRONTEND_URL: http://localhost:3001
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: app_b_db
+      DB_USER: sso_admin
+      DB_PASSWORD: sso_password
+      APP_NAME: Kominfo
+      SEED_ADMIN: "false"
+    ports:
+      - "4001:4001"
+    depends_on:
+      keycloak:
+        condition: service_healthy
+    networks:
+      - sso-net
+    restart: unless-stopped
+
+  # ── Frontend 2 (Kominfo) ────────────────────────────────────
+  frontend-2:
+    build:
+      context: ./frontend-2
+      dockerfile: Dockerfile
+    container_name: sso-frontend-2
+    environment:
+      VITE_KEYCLOAK_URL: http://localhost:8080
+      VITE_KEYCLOAK_REALM: sso-demo
+      VITE_KEYCLOAK_CLIENT_ID: frontend-app
+      VITE_API_URL: http://localhost:4001
+      VITE_APP_NAME: Kominfo
+      VITE_APP_COLOR: amber
+    ports:
+      - "3001:3000"
+    depends_on:
+      - backend-2
+    networks:
+      - sso-net
+    restart: unless-stopped
+
+  # ── Backend 3 (Layanan Pendidikan) ───────────────────────────────────────
+  backend-3:
+    build:
+      context: ./backend-3
+      dockerfile: Dockerfile
+    container_name: sso-backend-3
+    environment:
+      PORT: 4002
+      KEYCLOAK_URL: http://keycloak:8080
+      KEYCLOAK_REALM: sso-demo
+      KEYCLOAK_CLIENT_ID: backend-api
+      KEYCLOAK_CLIENT_SECRET: backend-secret-1234
+      FRONTEND_URL: http://localhost:3002
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: app_c_db
+      DB_USER: sso_admin
+      DB_PASSWORD: sso_password
+      APP_NAME: Layanan Pendidikan
+      SEED_ADMIN: "false"
+    ports:
+      - "4002:4002"
+    depends_on:
+      keycloak:
+        condition: service_healthy
+    networks:
+      - sso-net
+    restart: unless-stopped
+
+  # ── Frontend 3 (Layanan Pendidikan) ──────────────────────────────────────
+  frontend-3:
+    build:
+      context: ./frontend-3
+      dockerfile: Dockerfile
+    container_name: sso-frontend-3
+    environment:
+      VITE_KEYCLOAK_URL: http://localhost:8080
+      VITE_KEYCLOAK_REALM: sso-demo
+      VITE_KEYCLOAK_CLIENT_ID: frontend-app
+      VITE_API_URL: http://localhost:4002
+      VITE_APP_NAME: Layanan Pendidikan
+      VITE_APP_COLOR: emerald
+    ports:
+      - "3002:3000"
+    depends_on:
+      - backend-3
+    networks:
+      - sso-net
+    restart: unless-stopped
+
+  # ── Portal Smart Service ─────────────────────────────────────
+  portal:
+    build:
+      context: ./dashboard/app
+      dockerfile: Dockerfile
+    container_name: sso-portal
+    environment:
+      VITE_KEYCLOAK_URL: http://localhost:8080
+      VITE_KEYCLOAK_REALM: sso-demo
+      VITE_KEYCLOAK_CLIENT_ID: frontend-app
+    ports:
+      - "8000:8000"
+    networks:
+      - sso-net
+    restart: unless-stopped
+
+volumes:
+  pg-data:
+
+networks:
+  sso-net:
+    driver: bridge

@@ -1,0 +1,56 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Dependencies
+node_modules
+jspm_packages
+
+# Build and Output
+dist
+dist-ssr
+build
+out
+.next
+.nuxt
+coverage
+.turbo
+
+# Environment Variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.*
+!.env.example
+
+# Editor and OS files
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+Thumbs.db
+
+# Archives
+*.zip
+*.tar.gz
+*.rar
+
+# Misnamed directories
+{backend,frontend
+
+# Optional: Ignore CSV seed data if you don't want to track them (uncomment to apply)
+# *.csv

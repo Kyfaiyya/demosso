@@ -1,0 +1,149 @@
+/* Split Screen Login UI for SSO Smart Service */
+
+body {
+  display: flex !important;
+  flex-direction: row !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  height: 100vh !important;
+  background: white !important;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+}
+
+.sso-left-panel {
+  flex: 1.2;
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.8) 0%, rgba(79, 70, 229, 0.9) 100%), url('../img/bg.png') no-repeat center center;
+  background-size: cover;
+  color: white;
+  display: flex;
+  align-items: center;
+  padding: 0 10%;
+  box-sizing: border-box;
+}
+
+.login-pf-page {
+  flex: 1;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 40px !important;
+  background: white !important;
+  box-sizing: border-box;
+  overflow-y: auto;
+}
+
+#kc-header {
+  display: none !important;
+}
+
+.card-pf {
+  width: 100% !important;
+  max-width: 450px !important;
+  background: transparent !important;
+  backdrop-filter: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+/* Custom Header inside card */
+.card-pf::before {
+  content: "🏛️ Selamat Datang";
+  display: block;
+  font-size: 28px;
+  font-weight: 800;
+  color: #1e293b;
+  margin-bottom: 30px;
+}
+
+#kc-page-title {
+  font-size: 16px !important;
+  color: #64748b !important;
+  margin-bottom: 30px !important;
+  font-weight: 500 !important;
+  text-align: left !important;
+}
+
+.pf-c-form__label {
+  font-weight: 600 !important;
+  color: #334155 !important;
+  font-size: 14px !important;
+}
+
+.pf-c-form-control {
+  background-color: #f8fafc !important;
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 10px !important;
+  padding: 14px !important;
+  font-size: 15px !important;
+  color: #0f172a !important;
+  transition: all 0.2s !important;
+  border-bottom: 1px solid #cbd5e1 !important;
+  width: 100% !important;
+  box-sizing: border-box;
+}
+
+.pf-c-form-control:focus {
+  border-color: #4f46e5 !important;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2) !important;
+  background-color: #ffffff !important;
+  outline: none !important;
+}
+
+.pf-c-button.pf-m-primary {
+  background: #4f46e5 !important;
+  border-radius: 10px !important;
+  font-weight: 600 !important;
+  padding: 14px !important;
+  font-size: 16px !important;
+  text-transform: none !important;
+  transition: all 0.2s !important;
+  border: none !important;
+  width: 100% !important;
+  color: white !important;
+  cursor: pointer;
+  margin-top: 10px !important;
+}
+
+.pf-c-button.pf-m-primary:hover {
+  background: #4338ca !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.3) !important;
+}
+
+.login-pf-settings {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  margin-bottom: 20px !important;
+}
+
+.login-pf-settings a {
+  color: #4f46e5 !important;
+  font-weight: 500 !important;
+  font-size: 14px !important;
+  text-decoration: none !important;
+}
+
+.login-pf-settings a:hover {
+  text-decoration: underline !important;
+}
+
+#kc-registration {
+  margin-top: 30px !important;
+  font-size: 14px !important;
+  color: #64748b !important;
+}
+
+#kc-registration a {
+  color: #4f46e5 !important;
+  font-weight: 600 !important;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .sso-left-panel {
+    display: none !important;
+  }
+}
