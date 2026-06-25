@@ -7,7 +7,6 @@ import Profile from "./pages/Profile";
 import DataSiswa from "./pages/DataSiswa";
 import Nilai from "./pages/Nilai";
 import TokenDebug from "./pages/TokenDebug";
-import Landing from "./pages/Landing";
 import RegisterPage from "./pages/RegisterPage";
 
 export const AuthContext = createContext(null);
@@ -94,16 +93,16 @@ export default function App({ keycloak }) {
     <AuthContext.Provider value={{ authenticated, userProfile, keycloak, login, logout, hasRole, apiFetch, appRegistered, appRole, registerInApp, isAppAdmin }}>
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={authenticated ? <Navigate to="/dashboard" replace /> : <Landing />} />
-          <Route element={authenticated ? (appRegistered === false ? <RegisterPage /> : <Layout />) : <Navigate to="/" replace />}>
+          <Route path="/" element={<Navigate to="/dashboard" replace />} />
+          <Route element={appRegistered === false ? <RegisterPage /> : <Layout />}>
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/profile"   element={<Profile />} />
             <Route path="/data-siswa" element={<DataSiswa />} />
             <Route path="/nilai"     element={<Nilai />} />
             <Route path="/token"     element={<TokenDebug />} />
           </Route>
-          <Route path="/register" element={authenticated ? <RegisterPage /> : <Navigate to="/" replace />} />
-          <Route path="*" element={<Navigate to="/" replace />} />
+          <Route path="/register" element={<RegisterPage />} />
+          <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
       </BrowserRouter>
     </AuthContext.Provider>

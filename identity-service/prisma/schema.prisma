@@ -1,0 +1,82 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  DELETED
+}
+
+model User {
+  id        String     @id @default(uuid()) @db.Uuid
+  nik       String?    @unique @db.VarChar(16)
+  nip       String?    @unique @db.VarChar(18)
+  fullName  String     @db.VarChar(255)
+  email     String     @unique @db.VarChar(255)
+  phone     String?    @db.VarChar(20)
+  status    UserStatus @default(ACTIVE)
+  createdAt DateTime   @default(now()) @map("created_at")
+  updatedAt DateTime   @updatedAt @map("updated_at")
+
+  roles         UserRole[]
+  organizations UserOrganization[]
+
+  @@map("users")
+}
+
+model Role {
+  id   String @id @default(uuid()) @db.Uuid
+  name String @unique @db.VarChar(50) // SUPER_ADMIN, ADMIN_OPD, ASN, MASYARAKAT
+
+  users UserRole[]
+
+  @@map("roles")
+}
+
+model UserRole {
+  userId String @map("user_id") @db.Uuid
+  roleId String @map("role_id") @db.Uuid
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@id([userId, roleId])
+  @@map("user_roles")
+}
+
+model Organization {
+  id          String  @id @default(uuid()) @db.Uuid
+  name        String  @db.VarChar(255)
+  description String? @db.Text
+
+  users UserOrganization[]
+
+  @@map("organizations")
+}
+
+model UserOrganization {
+  userId         String @map("user_id") @db.Uuid
+  organizationId String @map("organization_id") @db.Uuid
+
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@id([userId, organizationId])
+  @@map("user_organizations")
+}
+
+model AuditLog {
+  id        String   @id @default(uuid()) @db.Uuid
+  actor     String   @db.VarChar(255) // User ID or system
+  action    String   @db.VarChar(100) // create_user, update_user, etc.
+  target    String   @db.VarChar(255) // target entity ID
+  timestamp DateTime @default(now())
+
+  @@map("audit_logs")
+}

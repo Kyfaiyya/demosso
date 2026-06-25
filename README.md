@@ -183,3 +183,7 @@ Password: admin123 (Mendapat role ADMIN di App Kominfo, bisa mendaftarkan SIM da
 Admin Pendidikan:
 Username: admin_pendidikan
 Password: admin123 (Mendapat role ADMIN di App Pendidikan, bisa menambah siswa)
+
+node sync-to-keycloak.js asn
+node sync-to-keycloak.js penduduk
+node sync-to-keycloak.js siswa

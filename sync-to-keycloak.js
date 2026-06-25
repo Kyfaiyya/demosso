@@ -31,11 +31,13 @@ async function getAdminToken() {
   return data.access_token;
 }
 
-async function createUser(token, username, name, password) {
+async function createUser(token, username, password, email, firstName, lastName) {
   const payload = {
     username: username,
     enabled: true,
-    firstName: name, // Menyimpan nama di field firstName
+    email: email,
+    firstName: firstName,
+    lastName: lastName,
     credentials: [
       {
         type: "password",
@@ -45,52 +47,79 @@ async function createUser(token, username, name, password) {
     ]
   };
 
-  const res = await fetch(`${KEYCLOAK_URL}/admin/realms/${REALM}/users`, {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify(payload)
-  });
+  try {
+    const res = await fetch(`${KEYCLOAK_URL}/admin/realms/${REALM}/users`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(payload)
+    });
 
-  if (!res.ok) {
-    if (res.status === 409) {
-      return { status: 'exist', username };
+    if (!res.ok) {
+      if (res.status === 409) {
+        return { status: 'exist', username };
+      }
+      const err = await res.text();
+      return { status: 'error', username, error: err };
     }
-    const err = await res.text();
-    return { status: 'error', username, error: err };
-  }
 
-  return { status: 'success', username };
+    return { status: 'success', username };
+  } catch (e) {
+    return { status: 'error', username, error: e.message };
+  }
 }
 
 function parseCSV(filename) {
   const content = fs.readFileSync(path.join(__dirname, filename), 'utf-8');
-  const lines = content.trim().split('\n');
   const rows = [];
+  let inQuotes = false;
+  let currentField = '';
+  let currentRow = [];
   
-  for (let i = 1; i < lines.length; i++) {
-    const line = lines[i].trim();
-    if (!line) continue;
+  for (let i = 0; i < content.length; i++) {
+    const char = content[i];
+    const nextChar = content[i+1];
     
-    // Simple CSV parser
-    const parts = line.split(',');
-    // Clean quotes if any
-    const values = parts.map(p => p.replace(/^"|"$/g, '').trim());
-    rows.push(values);
+    if (char === '"') {
+      if (inQuotes && nextChar === '"') {
+        currentField += '"';
+        i++; // skip next quote
+      } else {
+        inQuotes = !inQuotes;
+      }
+    } else if (char === ',' && !inQuotes) {
+      currentRow.push(currentField.trim());
+      currentField = '';
+    } else if ((char === '\n' || (char === '\r' && nextChar === '\n')) && !inQuotes) {
+      if (char === '\r') i++; // skip \n
+      currentRow.push(currentField.trim());
+      if (currentRow.length > 1 || currentRow[0] !== '') {
+        rows.push(currentRow);
+      }
+      currentRow = [];
+      currentField = '';
+    } else {
+      currentField += char;
+    }
   }
-  return rows;
+  if (currentField !== '' || currentRow.length > 0) {
+    currentRow.push(currentField.trim());
+    if (currentRow.length > 1 || currentRow[0] !== '') rows.push(currentRow);
+  }
+  
+  return rows.slice(1); // Exclude header
 }
 
 async function syncUsers(filename, identifierName, limit = 0) {
   console.log(`\n===========================================`);
   console.log(`Memulai sinkronisasi data dari ${filename}...`);
   console.log(`===========================================`);
-  
+
   const data = parseCSV(filename);
   const rowsToProcess = limit > 0 ? data.slice(0, limit) : data;
-  
+
   console.log(`Ditemukan ${data.length} baris data. Akan memproses ${rowsToProcess.length} data.`);
 
   try {
@@ -101,28 +130,34 @@ async function syncUsers(filename, identifierName, limit = 0) {
     let existCount = 0;
     let errorCount = 0;
 
-    // Untuk menghindari rate limiting atau membebani Keycloak, kita proses dengan batch kecil (concurrency = 10)
-    const CONCURRENCY = 10;
-    
+    // Memproses data SATU PER SATU secara sequential agar Keycloak tidak crash
+    const CONCURRENCY = 1;
+
     for (let i = 0; i < rowsToProcess.length; i += CONCURRENCY) {
-      // Refresh token setiap 500 request agar tidak expired (401 Unauthorized)
-      if (i > 0 && i % 500 === 0) {
+      // Refresh token lebih sering (setiap 100 request) agar tidak terkena 401 Unauthorized
+      if (i > 0 && i % 100 === 0) {
         token = await getAdminToken();
       }
 
       const batch = rowsToProcess.slice(i, i + CONCURRENCY);
-      
+
       const promises = batch.map(row => {
         const username = row[0]; // NIK / NIP / NISN
-        const name = row[1];     // Nama
-        // Hapus tanda strip pada tanggal lahir untuk dijadikan password
-        const password = row[2] ? row[2].replace(/-/g, '') : '123456'; 
+        const password = row[2] ? row[2].replace(/-/g, '') : '123456';
+        let email = row[3] || "";
+        email = email.replace(/\.\.+/g, '.').replace(/^\./, '').replace(/\.@/, '@');
         
-        return createUser(token, username, name, password);
+        const firstName = row[5] || row[1];
+        const lastName = row[6] || "";
+
+        return createUser(token, username, password, email, firstName, lastName);
       });
 
       const results = await Promise.all(promises);
-      
+
+      // Berikan sedikit jeda (delay) agar Keycloak tidak kelebihan beban CPU
+      await delay(10);
+
       results.forEach(res => {
         if (res.status === 'success') successCount++;
         else if (res.status === 'exist') existCount++;
@@ -137,12 +172,12 @@ async function syncUsers(filename, identifierName, limit = 0) {
         process.stdout.write(`\rProgress: ${i + batch.length}/${rowsToProcess.length} | Berhasil: ${successCount} | Sudah Ada: ${existCount} | Error: ${errorCount}`);
       }
     }
-    
+
     console.log(`\n\nSelesai memproses ${filename}:`);
     console.log(`✅ Berhasil ditambahkan: ${successCount}`);
     console.log(`⏭️ Sudah ada di Keycloak: ${existCount}`);
     console.log(`❌ Gagal: ${errorCount}`);
-    
+
   } catch (error) {
     console.error("Terjadi kesalahan:", error.message);
   }
@@ -150,24 +185,27 @@ async function syncUsers(filename, identifierName, limit = 0) {
 
 async function main() {
   const args = process.argv.slice(2);
-  // Default process first 100 just to test. Set limit to 0 for all.
-  const LIMIT = args.includes('--all') ? 0 : 50; 
+  const target = args[0];
   
-  if (!args.includes('--all')) {
-    console.log("INFO: Mode percobaan! Hanya 50 data pertama per file yang akan disinkronkan.");
-    console.log("Untuk sinkronkan semua (24.000 data), jalankan: node sync-to-keycloak.js --all\n");
+  if (!target || !['penduduk', 'asn', 'siswa'].includes(target)) {
+    console.log("PENGGUNAAN: node sync-to-keycloak.js <pilihan>");
+    console.log("Pilihan: penduduk, asn, atau siswa\n");
+    console.log("Contoh: node sync-to-keycloak.js penduduk");
+    return;
   }
 
-  // 1. Sinkronisasi Penduduk (Dukcapil)
-  await syncUsers('penduduk_8000.csv', 'NIK', LIMIT);
-  
-  // 2. Sinkronisasi ASN (Kominfo)
-  await syncUsers('asn_8000.csv', 'NIP', LIMIT);
+  // Gunakan mode full (limit 0)
+  const LIMIT = 0;
 
-  // 3. Sinkronisasi Siswa (Layanan Pendidikan)
-  await syncUsers('siswa_8000.csv', 'NISN', LIMIT);
+  if (target === 'penduduk') {
+    await syncUsers('penduduk_8000.csv', 'NIK', LIMIT);
+  } else if (target === 'asn') {
+    await syncUsers('asn_8000.csv', 'NIP', LIMIT);
+  } else if (target === 'siswa') {
+    await syncUsers('siswa_8000.csv', 'NISN', LIMIT);
+  }
 
-  console.log("\nProses Sinkronisasi Selesai!");
+  console.log("\nProses Selesai untuk data " + target);
 }
 
 main();

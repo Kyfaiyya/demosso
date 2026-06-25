@@ -6,10 +6,8 @@ import "./index.css";
 
 keycloak
   .init({
-    onLoad: "check-sso",                     // cek sesi, jangan redirect paksa
-    silentCheckSsoRedirectUri:               // iframe SSO check
-      window.location.origin + "/silent-check-sso.html",
-    pkceMethod: "S256",                      // PKCE wajib untuk public client
+    onLoad: "login-required",
+    pkceMethod: "S256",
     checkLoginIframe: false,
   })
   .then(() => {

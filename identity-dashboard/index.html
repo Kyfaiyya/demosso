@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Identity Service Admin</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container animate-fade">
+    <header>
+      <div class="brand">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="url(#grad)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <defs>
+            <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stop-color="#60a5fa" />
+              <stop offset="100%" stop-color="#34d399" />
+            </linearGradient>
+          </defs>
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+        </svg>
+        <h1>Smart City Identity</h1>
+      </div>
+      <div class="status-badge" id="apiStatus">
+        <div class="status-dot"></div>
+        <span>Checking API...</span>
+      </div>
+    </header>
+
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('users')">Users</button>
+      <button class="tab" onclick="switchTab('organizations')">Organizations</button>
+      <button class="tab" onclick="switchTab('audit')">Audit Logs</button>
+    </div>
+
+    <!-- USERS TAB -->
+    <div id="usersTab" class="tab-content active">
+      <div class="dashboard-grid">
+        <!-- Add User Card -->
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">Create New User</h2>
+          </div>
+          <form id="createUserForm">
+            <div class="form-group">
+              <label for="nik">NIK (Optional)</label>
+              <input type="text" id="nik" class="form-control" placeholder="16 digit NIK">
+            </div>
+            <div class="form-group">
+              <label for="nip">NIP (Optional)</label>
+              <input type="text" id="nip" class="form-control" placeholder="18 digit NIP">
+            </div>
+            <div class="form-group">
+              <label for="fullName">Full Name</label>
+              <input type="text" id="fullName" class="form-control" placeholder="John Doe" required>
+            </div>
+            <div class="form-group">
+              <label for="email">Email</label>
+              <input type="email" id="email" class="form-control" placeholder="john@example.com" required>
+            </div>
+            <div class="form-group">
+              <label for="phone">Phone</label>
+              <input type="text" id="phone" class="form-control" placeholder="0812...">
+            </div>
+            <button type="submit" class="btn btn-primary" id="btnSubmitUser">Create User & Sync</button>
+          </form>
+        </div>
+
+        <!-- Users List Card -->
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">User Directory</h2>
+            <button class="btn btn-sm btn-primary" onclick="loadUsers()" style="width:auto">Refresh</button>
+          </div>
+          <div class="table-container">
+            <table id="usersTable">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Email</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td colspan="4" style="text-align:center; color:var(--text-secondary)">Loading users...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ORGANIZATIONS TAB -->
+    <div id="organizationsTab" class="tab-content">
+      <div class="dashboard-grid">
+        <!-- Add Org -->
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">Add Organization</h2>
+          </div>
+          <form id="createOrgForm">
+            <div class="form-group">
+              <label for="orgName">Organization Name</label>
+              <input type="text" id="orgName" class="form-control" placeholder="Dinas Kominfo" required>
+            </div>
+            <div class="form-group">
+              <label for="orgDesc">Description</label>
+              <input type="text" id="orgDesc" class="form-control" placeholder="Optional description">
+            </div>
+            <button type="submit" class="btn btn-primary">Save Organization</button>
+          </form>
+        </div>
+
+        <!-- Org List -->
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title">OPD / Dinas List</h2>
+            <button class="btn btn-sm btn-primary" onclick="loadOrgs()" style="width:auto">Refresh</button>
+          </div>
+          <div class="table-container">
+            <table id="orgsTable">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Description</th>
+                </tr>
+              </thead>
+              <tbody>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- AUDIT TAB -->
+    <div id="auditTab" class="tab-content">
+      <div class="card" style="width: 100%">
+        <div class="card-header">
+          <h2 class="card-title">System Audit Trail</h2>
+          <button class="btn btn-sm btn-primary" onclick="loadAudit()" style="width:auto">Refresh</button>
+        </div>
+        <div class="table-container">
+          <table id="auditTable">
+            <thead>
+              <tr>
+                <th>Timestamp</th>
+                <th>Actor</th>
+                <th>Action</th>
+                <th>Target ID</th>
+              </tr>
+            </thead>
+            <tbody>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="notification" class="notification">
+    <div id="notifMessage">Message here</div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>

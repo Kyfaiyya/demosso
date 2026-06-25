@@ -1,0 +1,31 @@
+version: '3.8'
+services:
+  identity-db:
+    image: postgres:16-alpine
+    container_name: identity-db
+    environment:
+      POSTGRES_USER: sso_admin
+      POSTGRES_PASSWORD: sso_password
+      POSTGRES_DB: identity_db
+    ports:
+      - "5433:5432"
+    volumes:
+      - identity_pgdata:/var/lib/postgresql/data
+
+  identity-service:
+    build: .
+    container_name: identity-service
+    ports:
+      - "4003:4003"
+    environment:
+      - PORT=4003
+      - DATABASE_URL=postgresql://sso_admin:sso_password@identity-db:5432/identity_db?schema=public
+      - KEYCLOAK_URL=${KEYCLOAK_URL}
+      - KEYCLOAK_REALM=${KEYCLOAK_REALM}
+      - KEYCLOAK_ADMIN_USER=${KEYCLOAK_ADMIN_USER}
+      - KEYCLOAK_ADMIN_PASSWORD=${KEYCLOAK_ADMIN_PASSWORD}
+    depends_on:
+      - identity-db
+
+volumes:
+  identity_pgdata:

@@ -38,7 +38,7 @@ async function verifyToken(req, res, next) {
 
     if (!appUser) {
       const checkData = await pool.query(
-        "SELECT nik FROM sim_card WHERE nik = $1",
+        "SELECT nik FROM sim_card WHERE nik = $1 UNION SELECT nip as nik FROM asn WHERE nip = $1",
         [payload.nik || payload.preferred_username]
       );
       if (checkData.rows.length > 0) {

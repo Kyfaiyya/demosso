@@ -36,8 +36,8 @@ async function verifyToken(req, res, next) {
 
     if (!appUser) {
       const checkData = await pool.query(
-        "SELECT npwp FROM wajib_pajak WHERE REPLACE(REPLACE(npwp, '.', ''), '-', '') = REPLACE(REPLACE($1, '.', ''), '-', '') OR npwp = $1",
-        [payload.nik || payload.preferred_username]
+        "SELECT nisn FROM siswa WHERE nisn = $1",
+        [payload.nisn || payload.preferred_username]
       );
       if (checkData.rows.length > 0) {
         const ins = await pool.query(

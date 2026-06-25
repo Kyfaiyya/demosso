@@ -12,6 +12,15 @@
   "accessTokenLifespan": 300,
   "ssoSessionMaxLifespan": 36000,
 
+  "browserSecurityHeaders": {
+    "xFrameOptions": "",
+    "contentSecurityPolicy": "frame-src 'self'; frame-ancestors 'self' http://localhost:8000; object-src 'none';",
+    "xContentTypeOptions": "nosniff",
+    "xRobotsTag": "none",
+    "xXSSProtection": "1; mode=block",
+    "strictTransportSecurity": "max-age=31536000; includeSubDomains"
+  },
+
   "clients": [
     {
       "clientId": "frontend-app",
@@ -19,7 +28,7 @@
       "enabled": true,
       "publicClient": true,
       "standardFlowEnabled": true,
-      "directAccessGrantsEnabled": false,
+      "directAccessGrantsEnabled": true,
       "redirectUris": [
         "http://localhost:3000/*",
         "http://localhost:3000",
@@ -54,6 +63,19 @@
             "access.token.claim": "true",
             "userinfo.token.claim": "true"
           }
+        },
+        {
+          "name": "groups",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-group-membership-mapper",
+          "consentRequired": false,
+          "config": {
+            "full.path": "false",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "claim.name": "groups",
+            "userinfo.token.claim": "true"
+          }
         }
       ]
     },
@@ -65,18 +87,39 @@
       "secret": "backend-secret-1234",
       "standardFlowEnabled": false,
       "serviceAccountsEnabled": true,
-      "directAccessGrantsEnabled": false,
+      "directAccessGrantsEnabled": true,
       "protocol": "openid-connect"
     }
   ],
 
   "roles": {
     "realm": [
-      { "name": "app-admin",   "description": "Administrator penuh" },
-      { "name": "app-manager", "description": "Manager dengan akses terbatas" },
-      { "name": "app-user",    "description": "Pengguna biasa" }
+      { "name": "superadmin",         "description": "Super Administrator — akses penuh semua layanan" },
+      { "name": "admin-dukcapil",     "description": "Administrator Dukcapil (App 1)" },
+      { "name": "admin-kominfo",      "description": "Administrator Kominfo (App 2)" },
+      { "name": "admin-pendidikan",   "description": "Administrator Layanan Pendidikan (App 3)" },
+      { "name": "app-user",           "description": "Pengguna biasa" }
     ]
   },
+
+  "groups": [
+    {
+      "name": "Superadmin",
+      "realmRoles": ["superadmin", "admin-dukcapil", "admin-kominfo", "admin-pendidikan"]
+    },
+    {
+      "name": "Admin Dukcapil",
+      "realmRoles": ["admin-dukcapil"]
+    },
+    {
+      "name": "Admin Kominfo",
+      "realmRoles": ["admin-kominfo"]
+    },
+    {
+      "name": "Admin Pendidikan",
+      "realmRoles": ["admin-pendidikan"]
+    }
+  ],
 
   "users": [
     {
@@ -87,7 +130,8 @@
       "lastName": "Dukcapil",
       "enabled": true,
       "emailVerified": true,
-      "credentials": [{ "type": "password", "value": "admin123", "temporary": false }]
+      "credentials": [{ "type": "password", "value": "admin123", "temporary": false }],
+      "groups": ["Admin Dukcapil"]
     },
     {
       "id": "bbbb2222-2222-2222-2222-222222222222",
@@ -97,7 +141,8 @@
       "lastName": "Kominfo",
       "enabled": true,
       "emailVerified": true,
-      "credentials": [{ "type": "password", "value": "admin123", "temporary": false }]
+      "credentials": [{ "type": "password", "value": "admin123", "temporary": false }],
+      "groups": ["Admin Kominfo"]
     },
     {
       "id": "cccc3333-3333-3333-3333-333333333333",
@@ -107,7 +152,18 @@
       "lastName": "Pendidikan",
       "enabled": true,
       "emailVerified": true,
-      "credentials": [{ "type": "password", "value": "admin123", "temporary": false }]
+      "credentials": [{ "type": "password", "value": "admin123", "temporary": false }],
+      "groups": ["Admin Pendidikan"]
+    },
+    {
+      "username": "superadmin",
+      "email": "superadmin@sso.local",
+      "firstName": "Super",
+      "lastName": "Admin",
+      "enabled": true,
+      "emailVerified": true,
+      "credentials": [{ "type": "password", "value": "super123", "temporary": false }],
+      "groups": ["Superadmin"]
     },
     {
       "username": "1234567890123456",
